@@ -42,3 +42,8 @@ type instance (attr  ': attrs  :: FamilyTy) :<
 -- | subtype for rules
 type instance (inp :-> out) :< (inp' :-> out') = (inp :< inp', out' :< out)
 
+
+
+type instance As ('[] :: FamilyTy) ('[] :: FamilyTy) = '[]
+type instance As (a ': as :: FamilyTy) (b ': bs :: FamilyTy)
+    = a `As` b ': as `As` bs

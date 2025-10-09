@@ -3,7 +3,6 @@ module Data.Attribution where
 import Data.Type.Attribution
 import Data.Attribute
 import GHC.TypeLits
-
 import Data.Type.Utils
 
 infixr 5 :.
@@ -55,3 +54,10 @@ example
 
 t :: ()
 t = example # SSymbol @"2"
+
+shrinkTo :: Attribution a -> Attribution b -> Attribution (a `As` b)
+shrinkTo _ EmptyAtt = EmptyAtt
+shrinkTo l@(att :. atts) r@(att' :. atts')
+  = case cmpSymbol (getP att) (getP att') of
+      EQI -> att :. (shrinkTo atts atts')
+      LTI -> shrinkTo atts r

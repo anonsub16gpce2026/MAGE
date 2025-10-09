@@ -126,6 +126,12 @@ type family ProjectAux (o :: Ordering)
   ProjectAux LT l l' v ls atts = Project ls ( '(l', v) ': atts)
   ProjectAux GT l l' v ls atts = Project (l ': ls) atts
 
+type family As (l :: k) (r :: k) :: k 
+
+type family Labels (xs :: [(Symbol, k)]) :: [Symbol] where
+  Labels '[] = '[]
+  Labels ( '(l,_) ':  xs) = l ': Labels xs 
+
 
 data N = Z | S N
 
