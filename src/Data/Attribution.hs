@@ -5,7 +5,6 @@ import Data.Attribute
 import GHC.TypeLits
 
 import Data.Type.Utils
---import Data.Proxy
 
 infixr 5 :.
 data Attribution (t :: AttributionTy) where
@@ -14,18 +13,19 @@ data Attribution (t :: AttributionTy) where
        => Att '(l,v) -> Attribution ts
        -> Attribution ('(l,v) ': ts)
 
-infixr 5 .:
-(.:) :: KnownSymbol l
+-- | smart cons, keeping the attribution ordered
+infixr 5 .+:
+(.+:) :: KnownSymbol l
       => Att '(l,v) -> Attribution ts
       -> Attribution ('[ '(l,v)] :++ ts)
-att  .: EmptyAtt       = att :. EmptyAtt
-att .: r@(att' :. xs) =
+att  .+: EmptyAtt       = att :. EmptyAtt
+att .+: r@(att' :. xs) =
   case cmpSymbol (getP att) (getP att') of
     LTI -> att :. r
-    GTI -> att' :. (att .: xs)
+    GTI -> att' :. (att .+: xs)
     EQI -> error "impossible" -- (type error)
 
-
+-- | getter
 infixr 8 #
 (#) :: KnownSymbol l
     => Attribution ts -> SSymbol l -> Lookup l ts
@@ -36,12 +36,22 @@ infixr 8 #
       LTI -> error "impossible"
 EmptyAtt # _ = error "impossible"
 
+
+-- | Merging attributions
+infixr 5 .:+:
+(.:+:) :: Attribution a -> Attribution b -> Attribution (a :++ b)
+EmptyAtt       .:+: b        = b
+a              .:+: EmptyAtt = a
+l@(lv :. atts) .:+: r@(lv' :. atts')
+  = case cmpSymbol (getP lv) (getP lv') of
+      LTI -> lv :. (atts .:+: r)
+      EQI -> error "impossible"
+      GTI -> lv' :. (l .:+: atts')
+  
+-- | an example
 example :: Attribution ['("1", Bool), '("2", ()), '("4", String)]
 example
-  = MkAtt @"1" True
-  :. MkAtt @"2" ()
-  :. MkAtt @"4" ""
-  :. EmptyAtt
+  = MkAtt @"1" True :. MkAtt @"2" () :. MkAtt @"4" "" :. EmptyAtt
 
 t :: ()
 t = example # SSymbol @"2"

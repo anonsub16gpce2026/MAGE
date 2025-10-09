@@ -11,7 +11,7 @@ import GHC.TypeLits (Symbol, CmpSymbol, TypeError,
 import Data.Type.Ord
 import Data.Type.Bool
 import Data.Type.Equality
-import Data.Kind (Constraint) --, Type)
+import Data.Kind (Constraint)
 
 -- | Comparison of pairs by their first component (Symbol).
 type family Leq (a :: (Symbol, k)) (b :: (Symbol, k)) :: Bool where
@@ -96,7 +96,8 @@ type family (x :: (Symbol,k)) :<| (xs :: [(Symbol,k)]) where
   x :<| xs = Merge '[x] xs
 
 -- | Subtyping, generic
-type family SubType (l :: [(Symbol,k)]) (r :: [(Symbol,k)]) where
+type family SubType (l :: [(Symbol,k)]) (r :: [(Symbol,k)]) :: Constraint
+ where
   SubType '[] r = ()
   SubType ( '(l,v) ': ts) ( '(l',v') ': ts')
      = SubTypeAux (Compare l l') '(l,v) '(l',v') ts ts'
@@ -109,7 +110,7 @@ type family SubTypeAux (o :: Ordering)
   SubTypeAux 'LT _ _ _ _     = TypeError (Text "ERR") 
 
 -- |  subtyping
-type family (t :: k) :< (u :: k)
+type family (t :: k) :< (u :: k) :: Constraint
 
 
 type family Project (l :: [Symbol]) (xs :: [(Symbol, k)]) :: [(Symbol, k)]
@@ -131,4 +132,3 @@ data N = Z | S N
 data SNat (n :: N) where
   SZ :: SNat Z
   SS :: SNat n -> SNat (S n)
-

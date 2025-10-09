@@ -26,3 +26,19 @@ type instance AtN (S n) (att ': atts :: FamilyTy) = AtN n atts
 type instance AtN Z ((att ': _ :-> _) :: RuleTy) = att
 type instance AtN (S n) ((att ': atts :-> _) :: RuleTy)
   = AtN n atts
+
+type family Ext (t :: k) (u :: k) :: k
+type instance Ext ('[] :: FamilyTy) ('[] :: FamilyTy) = '[]
+type instance Ext (att  ': atts  :: FamilyTy) (att' ': atts' :: FamilyTy)
+  = att :++ att' ': Ext atts atts' 
+type instance Ext (inp :-> out) (inp' :-> out')
+  = (Ext inp inp' :-> Ext out out')
+
+-- | subtypr for families 
+type instance ('[] :: FamilyTy) :< (f :: FamilyTy) = ()
+type instance (attr  ': attrs  :: FamilyTy) :<
+              (attr' ': attrs' :: FamilyTy) = (attr :< attr', attrs :< attrs') 
+
+-- | subtype for rules
+type instance (inp :-> out) :< (inp' :-> out') = (inp :< inp', out' :< out)
+
