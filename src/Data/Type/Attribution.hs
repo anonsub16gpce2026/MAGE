@@ -13,3 +13,6 @@ type family (l :: AttributionTy) :++ (r :: AttributionTy)
   l :++ r = Merge l r
   -- todo: Type errors
 
+-- | beware, it is orphan
+type instance (l :: AttributionTy) :< (r :: AttributionTy)
+  = SubType l r

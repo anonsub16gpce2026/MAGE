@@ -57,6 +57,15 @@ type Example = '[ '("c", Int), '("a", Bool), '("b", Char) ]
 type Sorted = Sort Example
 
 
+type family Lookup (l :: Symbol) (xs :: [(Symbol,k)]):: k where
+  Lookup _ '[] = TypeError (Text "ERR:Lookup")
+  Lookup l ( '(l',v) ': xs) = LookupAux (Compare l l') l v xs
+type family LookupAux (o :: Ordering)(l :: Symbol)
+                      (v :: k)(xs :: [(Symbol,k)]) where
+  LookupAux 'EQ _ v _  = v
+  LookupAux 'GT l _ xs = Lookup l xs
+  LookupAux 'LT _ _ _  = TypeError (Text "ERR:Lookup")
+
 type family IsMapping (xs :: [(Symbol,k)]) :: Constraint where
   IsMapping '[]  = ()
   IsMapping '[t] = ()
@@ -101,3 +110,25 @@ type family SubTypeAux (o :: Ordering)
 
 -- |  subtyping
 type family (t :: k) :< (u :: k)
+
+
+type family Project (l :: [Symbol]) (xs :: [(Symbol, k)]) :: [(Symbol, k)]
+ where
+  Project '[] _ = '[]
+  Project ( l ': ls) ( '(l', v) ': atts)
+    = ProjectAux (Compare l l') l l' v ls atts
+type family ProjectAux (o :: Ordering)
+                       (l :: Symbol) (l' :: Symbol) (v :: k)
+                       (ls :: [Symbol]) (atts :: [(Symbol, k)])
+ where
+  ProjectAux EQ l l' v ls atts = '(l, v) ': Project ls atts
+  ProjectAux LT l l' v ls atts = Project ls ( '(l', v) ': atts)
+  ProjectAux GT l l' v ls atts = Project (l ': ls) atts
+
+
+data N = Z | S N
+
+data SNat (n :: N) where
+  SZ :: SNat Z
+  SS :: SNat n -> SNat (S n)
+

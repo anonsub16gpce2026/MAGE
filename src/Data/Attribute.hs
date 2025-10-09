@@ -10,7 +10,7 @@ pAtt :: Proxy (t :: AttTy)
 pAtt = Proxy
 
 data Att (t :: AttTy) where
-  MkAtt :: KnownSymbol n => t -> Att '(n, t)
+  MkAtt :: KnownSymbol n => {getV :: t} -> Att '(n, t)
 
 getP :: KnownSymbol n => Att '(n,t) -> SSymbol n
 getP _ = SSymbol
