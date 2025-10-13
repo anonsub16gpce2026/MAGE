@@ -28,6 +28,7 @@ type instance AtN (S n) ((att ': atts :-> _) :: RuleTy)
   = AtN n atts
 
 type family Ext (t :: k) (u :: k) :: k
+
 type instance Ext ('[] :: FamilyTy) ('[] :: FamilyTy) = '[]
 type instance Ext (att  ': atts  :: FamilyTy) (att' ': atts' :: FamilyTy)
   = att :++ att' ': Ext atts atts' 

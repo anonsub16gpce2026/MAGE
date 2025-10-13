@@ -67,7 +67,8 @@ library
                       Data.Rule,
                       Data.Type.Aspect,
                       Data.Aspect,
-                      Data.Type.Utils
+                      Data.Type.Utils,
+                      Example
 
     -- Modules included in this library but not exported.
     -- other-modules:

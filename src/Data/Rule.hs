@@ -6,7 +6,7 @@ import Data.Type.Utils
 import Data.Attribute
 import GHC.TypeLits hiding (SNat)
 import Data.Type.Equality
-
+import Unsafe.Coerce
 
 infixr 5 :-
 data Family (t :: FamilyTy) where
@@ -42,18 +42,27 @@ _ .+ _ = error "impossible"
 data Rule (r :: RuleTy) where
   MkRule :: {runRule :: Family inp -> Family out} -> Rule (inp :-> out)
 
-exampleRule :: Rule (   '[ '[], '[ '("eval", Int)], '[ '("eval", Int)]]
-                    :-> '[ '[ '("eval", Int)], '[], '[]])
-exampleRule = MkRule $ \inp ->
-  (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"eval") :. EmptyAtt)
+
+type RuleEval = '[ '[], '[ '("eval", Int)], '[ '("eval", Int)]]
+              :-> '[ '[ '("eval", Int)], '[], '[]]
+rul_eval_add :: Rule RuleEval
+rul_eval_add = MkRule $ \inp ->
+  (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"eval" + (inp .$ (SS $SS SZ)) # SSymbol @"eval")
+   :. EmptyAtt)
    :- EmptyAtt :- EmptyAtt :- Empty
 
+rul_size_add :: Rule (   '[ '[], '[ '("size", Int)], '[ '("size", Int)]]
+                    :-> '[ '[ '("size", Int)], '[], '[]])
+rul_size_add = MkRule $ \inp ->
+  (MkAtt @"size" ((inp .$ (SS SZ)) # SSymbol @"size") :. EmptyAtt)
+   :- EmptyAtt :- EmptyAtt :- Empty
 
 
 
 (.+.) :: Rule (inp :-> out) -> Rule (inp' :-> out')
       -> Rule (Ext inp inp' :-> Ext out out')
 (MkRule f) .+. (MkRule g)
-  = MkRule $ \inp -> let out1 = f inp
-                         out2 = g inp
-                     in out1 .+ out2
+  = MkRule $ \inp ->
+  let out1 = f (Unsafe.Coerce.unsafeCoerce inp :: Family inp)
+      out2 = g (Unsafe.Coerce.unsafeCoerce inp :: Family inp')
+  in out1 .+ out2
