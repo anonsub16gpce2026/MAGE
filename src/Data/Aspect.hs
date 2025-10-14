@@ -19,3 +19,5 @@ l@(ConsAspect prd rul asp) .:*: r@(ConsAspect prd' rul' asp')
       LTI -> ConsAspect prd rul $ asp .:*: r
       GTI -> ConsAspect prd' rul' $ l .:*: asp'
 
+singAsp :: KnownSymbol prd => Rule (i :-> o) ->  Aspect '[ '(prd, i :-> o)]
+singAsp rul = ConsAspect SSymbol rul EmptyAspect

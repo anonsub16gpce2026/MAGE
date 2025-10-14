@@ -20,10 +20,13 @@
 > import Data.Aspect
 > import Data.Type.Grammar
 > import Data.EADT
+> import GHC.TypeLits
+> import MiniAspectAG
 
+Syntax
+======
 
 A grammar for a simple expression language:
-
 
 > type G = '[ '("add", "E" :=> '[ 'N "E", 'N "E"]),
 >             '("val", "E" :=> '[ 'T Int])]
@@ -45,3 +48,50 @@ The constructor `SV :: Variant g nt prd -> SomeVariant g nt`
 hides the production index, since it is dynamic
 (it cannot be decided when computing `HList (Args g nt p)`, otherwise
 we would fix the shape of the AST).
+
+Semantics
+=========
+
+We use the attribute "eval" of type Int to denote the value of the expression.
+Let us build a rule to compute "eval" at "add".
+Its type states that it depends on eval at the first and second child,
+and computes eval at the father:
+
+> type RuleEvalAdd
+>  =   '[ '[],                '[ '("eval", Int)], '[ '("eval", Int)]]
+>  :-> '[ '[ '("eval", Int)], '[],                '[]]
+
+The proper rule:
+
+> rul_eval_add :: Rule RuleEvalAdd
+> rul_eval_add = MkRule $ \inp ->
+>   (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"eval"
+>     + (inp .$ (SS $ SS SZ)) # SSymbol @"eval")
+>        :. EmptyAtt)
+>   :- EmptyAtt
+>   :- EmptyAtt
+>   :- Empty
+
+The rule is straightforward to implement, it lookups the values in the
+input family and builds the output family. It is cumbersome to read,
+this is fixed by building a set of combinators as we do in AspectAG.
+For this document, the important thing to consider is how rules are
+combined, not how they are built.
+
+> type RuleEvalVal
+>   =   '[ '[],                '[ '("term", Int)]]
+>   :-> '[ '[ '("eval", Int)], '[]]
+> rul_eval_val :: Rule RuleEvalVal
+> rul_eval_val = MkRule $ \inp ->
+>   (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"term") :. EmptyAtt)
+>   :- EmptyAtt
+>   :- Empty
+
+The following Aspect encodes the evaluation semantics. 
+
+> asp_eval =   singAsp @"add" rul_eval_add
+>         .:*: singAsp @"val" rul_eval_val
+>         .:*: EmptyAspect
+
+For the grammar `G`, `asp_eval` is well-formed if we consider
+S("E") = "eval", S(Int) = "term" and no inherited attributes.

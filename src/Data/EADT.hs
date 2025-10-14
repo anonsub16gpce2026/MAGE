@@ -7,11 +7,7 @@ import Data.Type.Grammar
 import GHC.TypeLits
 import Data.Type.Ord
 import Data.Kind
-
-data HList (t :: [Type]) where
-  HNil :: HList '[]
-  (:::) :: t -> HList l -> HList (t ': l)
-infixr 5 :::
+import Data.Type.Utils
 
 data SomeVariant (g :: Grammar) (nt :: NT) where
   SV :: Variant g nt p -> SomeVariant g nt
@@ -24,7 +20,8 @@ type family Symbols2Types (g :: Grammar) (nt :: NT)
                           (p :: ProdName) (s :: [TNT]) :: [Type] where
   Symbols2Types g nt p '[] = '[]
   Symbols2Types g nt p ( T t ': tnts) = t ': Symbols2Types g nt p tnts
-  Symbols2Types g nt p ( N n ': tnts) = SomeVariant g nt ': Symbols2Types g nt p tnts
+  Symbols2Types g nt p ( 'N n ': tnts)
+    = SomeVariant g nt ': Symbols2Types g nt p tnts
 
 type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) :: [Type] where
   Args g nt p = Symbols2Types g nt p (ArgsAux g g nt p)

@@ -11,7 +11,7 @@ import GHC.TypeLits (Symbol, CmpSymbol, TypeError,
 import Data.Type.Ord
 import Data.Type.Bool
 import Data.Type.Equality
-import Data.Kind (Constraint)
+import Data.Kind (Constraint, Type)
 
 -- | Comparison of pairs by their first component (Symbol).
 type family Leq (a :: (Symbol, k)) (b :: (Symbol, k)) :: Bool where
@@ -138,3 +138,12 @@ data N = Z | S N
 data SNat (n :: N) where
   SZ :: SNat Z
   SS :: SNat n -> SNat (S n)
+
+data HList (t :: [Type]) where
+  HNil :: HList '[]
+  (:::) :: t -> HList l -> HList (t ': l)
+infixr 5 :::
+
+data HKList (f :: k -> Type) (l :: [k]) where
+  HKNil  :: HKList f '[]
+  HKCons :: f t -> HKList f ts -> HKList f (t ': ts)

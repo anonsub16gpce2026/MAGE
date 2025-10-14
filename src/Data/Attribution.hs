@@ -55,9 +55,13 @@ example
 t :: ()
 t = example # SSymbol @"2"
 
-shrinkTo :: Attribution a -> Attribution b -> Attribution (a `As` b)
-shrinkTo _ EmptyAtt = EmptyAtt
-shrinkTo l@(att :. atts) r@(att' :. atts')
-  = case cmpSymbol (getP att) (getP att') of
-      EQI -> att :. (shrinkTo atts atts')
-      LTI -> shrinkTo atts r
+castAttr :: (b :< a) => Attribution a -> Attribution b -> Attribution (a `As` b)
+castAttr = castAttrAux
+  where
+    castAttrAux :: Attribution a -> Attribution b
+                -> Attribution (a `As` b)
+    castAttrAux _ EmptyAtt = EmptyAtt
+    castAttrAux l@(att :. atts) r@(att' :. atts')
+      = case cmpSymbol (getP att) (getP att') of
+          EQI -> att :. (castAttrAux atts atts')
+          LTI -> castAttrAux atts r

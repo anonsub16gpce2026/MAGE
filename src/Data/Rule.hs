@@ -10,7 +10,7 @@ import Unsafe.Coerce
 
 infixr 5 :-
 data Family (t :: FamilyTy) where
-  Empty :: Family '[]
+  EmptyFam :: Family '[]
   (:-)  :: Attribution atts -> Family attrs -> Family (atts ': attrs)
 
 -- | getter, by index
@@ -20,22 +20,24 @@ data Family (t :: FamilyTy) where
 _ .$ _ = error "impossible"
 
 
--- | Projection/Cast
-as :: Family l -> Family r -> Family (l `As` r)
-as Empty Empty = Empty
-as (att :- atts) (att' :- atts')
-  = shrinkTo att att' :- atts `as` atts'
-as _ _ = error "impossible"
+-- | Projection/CcastFamt
+castFam :: (r :< l) =>
+    Family l -> Family r -> Family (l `As` r)
+castFam EmptyFam EmptyFam = EmptyFam
+castFam (att :- atts) (att' :- atts')
+  = castAttr att att' :- atts `castFam` atts'
+castFam _ _ = error "impossible"
 
 -- | Theorem:
--- lemma :: Ext a b `As` a :~: a
+-- lemma :: Ext a b `CastFam` a :~: a
 -- lemma = undefined
 
 
 -- | merging of families
 (.+) :: Family t -> Family u -> Family (Ext t u)
-Empty .+ Empty = Empty
-(attr :- attrs) .+ (attr' :- attrs') = (attr .:+: attr') :- attrs .+ attrs'
+EmptyFam .+ EmptyFam = EmptyFam
+(attr :- attrs) .+ (attr' :- attrs')
+  = (attr .:+: attr') :- attrs .+ attrs'
 _ .+ _ = error "impossible"
 
 
@@ -43,19 +45,6 @@ data Rule (r :: RuleTy) where
   MkRule :: {runRule :: Family inp -> Family out} -> Rule (inp :-> out)
 
 
-type RuleEval = '[ '[], '[ '("eval", Int)], '[ '("eval", Int)]]
-              :-> '[ '[ '("eval", Int)], '[], '[]]
-rul_eval_add :: Rule RuleEval
-rul_eval_add = MkRule $ \inp ->
-  (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"eval" + (inp .$ (SS $SS SZ)) # SSymbol @"eval")
-   :. EmptyAtt)
-   :- EmptyAtt :- EmptyAtt :- Empty
-
-rul_size_add :: Rule (   '[ '[], '[ '("size", Int)], '[ '("size", Int)]]
-                    :-> '[ '[ '("size", Int)], '[], '[]])
-rul_size_add = MkRule $ \inp ->
-  (MkAtt @"size" ((inp .$ (SS SZ)) # SSymbol @"size") :. EmptyAtt)
-   :- EmptyAtt :- EmptyAtt :- Empty
 
 
 

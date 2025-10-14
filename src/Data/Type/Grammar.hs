@@ -17,3 +17,4 @@ type data Prod = NT :=> [TNT]
 type Grammar = [(ProdName, Prod)]
 
 type family l :+++ r where l :+++ r = AppendSymbol l r
+
