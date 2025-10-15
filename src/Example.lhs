@@ -38,11 +38,11 @@ for a production prd. It takes the Heterogeneous list of
 suitable arguments. For instance the following AST represents
 the expression `2`:
 
-> val2 = Variant @G @"E" @"val" $ (2 :: Int) ::: HNil
+> val2 = Variant @G @"E" @"val" symbolSing $  (2 :: Int) ::: HNil
 
 The following, 2+2 :
 
-> val2p2 = Variant @G @"E" @"add" $ SV val2 ::: SV val2 ::: HNil
+> val2p2 = Variant @G @"E" @"add" symbolSing $ SV val2 ::: SV val2 ::: HNil
 
 The constructor `SV :: Variant g nt prd -> SomeVariant g nt`
 hides the production index, since it is dynamic
@@ -70,7 +70,7 @@ The proper rule:
 >        :. EmptyAtt)
 >   :- EmptyAtt
 >   :- EmptyAtt
->   :- Empty
+>   :- EmptyFam
 
 The rule is straightforward to implement, it lookups the values in the
 input family and builds the output family. It is cumbersome to read,
@@ -85,7 +85,7 @@ combined, not how they are built.
 > rul_eval_val = MkRule $ \inp ->
 >   (MkAtt @"eval" ((inp .$ (SS SZ)) # SSymbol @"term") :. EmptyAtt)
 >   :- EmptyAtt
->   :- Empty
+>   :- EmptyFam
 
 The following Aspect encodes the evaluation semantics. 
 
@@ -95,3 +95,4 @@ The following Aspect encodes the evaluation semantics.
 
 For the grammar `G`, `asp_eval` is well-formed if we consider
 S("E") = "eval", S(Int) = "term" and no inherited attributes.
+

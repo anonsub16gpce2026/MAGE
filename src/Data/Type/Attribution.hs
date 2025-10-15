@@ -20,6 +20,7 @@ type family (l :: AttributionTy) :++ (r :: AttributionTy)
 type instance (l :: AttributionTy) :< (r :: AttributionTy)
   = SubType l r
 
+
 type instance  As (xs :: AttributionTy) '[] = '[]
 type instance  As ( '(l,  v)  ': xs :: AttributionTy)
                   ( '(l', v') ': ys :: AttributionTy)

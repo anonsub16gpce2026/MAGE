@@ -13,7 +13,8 @@ data SomeVariant (g :: Grammar) (nt :: NT) where
   SV :: Variant g nt p -> SomeVariant g nt
 
 data Variant (g :: Grammar) (nt :: NT) (p :: ProdName) where
-  Variant :: HList (Args g nt p) -> Variant g nt p
+  Variant :: forall g nt p . KnownSymbol p => SSymbol p -> HList (Args g nt p)
+          -> Variant g nt p
 
 
 type family Symbols2Types (g :: Grammar) (nt :: NT)

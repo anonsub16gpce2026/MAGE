@@ -22,3 +22,8 @@ type family CombineAsp (o :: Ordering) (prd :: Symbol) (prd' :: Symbol)
     = '(prd, r) ': (asp :*: ( '(prd', r') ': asp'))
   CombineAsp GT prd prd' r r' asp asp'
     = '(prd', r') ': (('(prd, r) ': asp) :*: asp')
+
+type family (a :: AspectTy) :# (l :: Symbol) :: RuleTy where
+  ( '(l, r) ': asp) :# l = r
+  ( '(l, r) ': asp) :# l' = asp :# l'
+  

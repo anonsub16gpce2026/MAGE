@@ -19,7 +19,8 @@ import Data.EADT
 import GHC.TypeLits
 import Data.Kind
 import Data.Type.Equality
-
+import Data.Proxy
+import Unsafe.Coerce
 
 -- | stores semantic functions, i.e. functions from inherited attributes
 -- (input) to synthesized attributes (output)
@@ -31,14 +32,6 @@ data SemFunc (f :: SemFuncTy) where
 type data SemFuncTy =
   AttributionTy :==> AttributionTy
 
-
--- class Kn (fcs :: [SemFuncTy]) where 
---   kn :: HKList SemFunc (fcs :: [SemFuncTy]) -> Family (ICh fcs)
---      -> Family (SCh fcs)
--- instance Kn '[] where
---   kn _ _ = EmptyFam
--- instance Kn fcs => Kn (ic :==> sc ': fcs) where
---   kn (HKCons fc fcs) (c :- cs) = runSemFunc fc c :- kn fcs cs
 
 type family ICh (r :: [SemFuncTy]) :: [AttributionTy] where
   ICh '[] = '[]
@@ -54,19 +47,39 @@ kn (HKCons fc fcs) (c :- cs)
   = case fc of
       SemFunc f -> f c :- kn fcs cs
 
-knit :: () --(ICh fcs ~ ic, SCh fcs ~ sc)
-     => Rule ( ip ': SCh fcs :-> sp ': ICh fcs) -> HKList SemFunc fcs
+knit :: Rule ( ip ': SCh fcs :-> sp ': ICh fcs) -> HKList SemFunc fcs
      -> Attribution ip -> Attribution sp
 knit (MkRule rul) fc ip
   = let (sp :- ic) = rul (ip :- sc)
         sc         = kn fc ic
     in sp
 
--- type family BuildFC (asp :: AspectTy) (args :: [Type]) (g :: Grammar)
---                     (nt :: NT) (p :: ProdName) :: [SemFuncTy]
---  where
---   BuildFC asp '[] g nt p = '[]
---   BuildFC asp (EADT g nt' ': args) g nt p = 
+semTop :: Proxy (g :: Grammar) -> Proxy (a :: Schema)
+       -> Aspect (TopRuleTyGram g a) -> Variant g nt prd
+       -> Attribution (I nt a) -> Attribution (S nt a)
+semTop pg pa asp (Variant prd args)
+  = undefined knit (asp ## prd) undefined
 
--- buildFC :: Aspect asp -> HList (Args g nt p)
---         -> HKList SemFunc (BuildFC asp (Args g nt p) g nt p)
+buildFC :: Proxy (g :: Grammar) -> Proxy (a :: Schema)
+        -> Proxy nt -- ambg types
+        -> Aspect (TopRuleTyGram g a)
+        -> SSymbol prd
+        -> HList (Args g nt prd)
+        -> HKList SemFunc (BuildFC g a prd)
+buildFC pg pa pnt asp prd HNil = _
+
+
+type family BuildFC (g :: Grammar)(a :: Schema)(prd :: ProdName) :: [SemFuncTy]
+  where
+    BuildFC g a p = BuildFCProd (GetProd p g) a
+type family BuildFCProd (g :: Prod)(a :: Schema) :: [SemFuncTy] where
+  BuildFCProd (lhs :=> rhs) a = BuildFCTNT rhs a
+type family BuildFCTNT (rhs :: [TNT])(a :: Schema) :: [SemFuncTy] where
+  BuildFCTNT '[] a = '[]
+  BuildFCTNT ('N s ': tnt) a = I s a :==> S s a ': BuildFCTNT tnt a
+  BuildFCTNT ('T t ': tnt) a = ( '[] :==> '[ '("term", t)]) ': BuildFCTNT tnt a
+
+
+lemma_rul_get :: Proxy g -> Proxy a -> SSymbol prd ->
+             TopRuleTyGram g a :# prd :~: TopRuleTyProd g a prd
+lemma_rul_get g a p = unsafeCoerce Refl
