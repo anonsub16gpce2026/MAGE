@@ -1,3 +1,4 @@
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeData #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -47,6 +48,7 @@ kn (HKCons fc fcs) (c :- cs)
   = case fc of
       SemFunc f -> f c :- kn fcs cs
 
+
 knit :: Rule ( ip ': SCh fcs :-> sp ': ICh fcs) -> HKList SemFunc fcs
      -> Attribution ip -> Attribution sp
 knit (MkRule rul) fc ip
@@ -54,32 +56,34 @@ knit (MkRule rul) fc ip
         sc         = kn fc ic
     in sp
 
-semTop :: Proxy (g :: Grammar) -> Proxy (a :: Schema)
-       -> Aspect (TopRuleTyGram g a) -> Variant g nt prd
-       -> Attribution (I nt a) -> Attribution (S nt a)
-semTop pg pa asp (Variant prd args)
-  = undefined knit (asp ## prd) undefined
-
-buildFC :: Proxy (g :: Grammar) -> Proxy (a :: Schema)
-        -> Proxy nt -- ambg types
-        -> Aspect (TopRuleTyGram g a)
-        -> SSymbol prd
-        -> HList (Args g nt prd)
-        -> HKList SemFunc (BuildFC g a prd)
-buildFC pg pa pnt asp prd HNil = _
-
-
-type family BuildFC (g :: Grammar)(a :: Schema)(prd :: ProdName) :: [SemFuncTy]
-  where
-    BuildFC g a p = BuildFCProd (GetProd p g) a
-type family BuildFCProd (g :: Prod)(a :: Schema) :: [SemFuncTy] where
-  BuildFCProd (lhs :=> rhs) a = BuildFCTNT rhs a
-type family BuildFCTNT (rhs :: [TNT])(a :: Schema) :: [SemFuncTy] where
-  BuildFCTNT '[] a = '[]
-  BuildFCTNT ('N s ': tnt) a = I s a :==> S s a ': BuildFCTNT tnt a
-  BuildFCTNT ('T t ': tnt) a = ( '[] :==> '[ '("term", t)]) ': BuildFCTNT tnt a
 
 
 lemma_rul_get :: Proxy g -> Proxy a -> SSymbol prd ->
              TopRuleTyGram g a :# prd :~: TopRuleTyProd g a prd
 lemma_rul_get g a p = unsafeCoerce Refl
+
+
+-- class FC (g :: Grammar)  (a   :: Schema)
+--          (r :: AspectTy) (p   :: ProdName) (nt :: NT)
+--          (tnt :: [TNT]) where
+-- --  type BuildFC g a r p nt :: [SemFuncTy]
+--   buildFC' :: Proxy g -> Proxy a -> Aspect r -> Proxy p -> Proxy nt
+--            -> Proxy tnt -> HList (Args g nt p)
+--            -> HKList SemFunc (BuildFC g a r p nt tnt)
+
+type family BuildFC (g :: Grammar)  (a   :: Schema)
+                    (r :: AspectTy) (p   :: ProdName)
+                    (nt :: NT) (args  :: [Type])
+     :: [SemFuncTy]
+  where
+  BuildFC g a r p nt '[] = '[]
+  BuildFC g a r p nt (SomeVariant g nt' ': ts)
+    = I nt' a :==> S nt' a ': BuildFC g a r p nt ts
+  BuildFC g a r p nt (t ': ts)
+    = '[] :==> '[ '( "term", t)] ': BuildFC g a r p nt ts
+
+buildFC :: Proxy g -> Proxy a -> Aspect r -> Proxy p -> Proxy nt
+        -> HList (Args g nt p)
+        -> HKList SemFunc (BuildFC g a r p nt (Args g nt p)) 
+buildFC g a r p nt HNil = HKNil
+buildFC g a r p nt (t ::: ts) = undefined

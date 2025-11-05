@@ -27,6 +27,9 @@ type family GetProd (p :: ProdName) (g :: Grammar) :: Prod where
   GetProd pnam ( '(_, p) ': ps ) = GetProd pnam ps
   GetProd pnam '[] = TypeError (Text "ERR: no prod in gram")
 
+type family RHS (p :: Prod) :: [TNT] where
+  RHS (_ :=> rhs) = rhs
+
 type family l :+++ r where l :+++ r = AppendSymbol l r
 
 

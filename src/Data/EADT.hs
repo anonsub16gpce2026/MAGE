@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -24,7 +25,7 @@ type family Symbols2Types (g :: Grammar) (nt :: NT)
   Symbols2Types g nt p ( 'N n ': tnts)
     = SomeVariant g nt ': Symbols2Types g nt p tnts
 
-type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) :: [Type] where
+type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) = (r :: [Type]) where
   Args g nt p = Symbols2Types g nt p (ArgsAux g g nt p)
 type family ArgsAux (h :: Grammar) (g :: Grammar) (nt :: NT) (p :: ProdName)
    :: [TNT]
