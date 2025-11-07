@@ -10,23 +10,28 @@ import Data.Type.Ord
 import Data.Kind
 import Data.Type.Utils
 
-data SomeVariant (g :: Grammar) (nt :: NT) where
-  SV :: Variant g nt p -> SomeVariant g nt
+data ArgList (g :: Grammar) (l :: [TNT]) where
+  ArgNil  :: ArgList g '[]
+  ArgCons :: EADT g t -> ArgList g ts -> ArgList g (t ': ts)
 
-data Variant (g :: Grammar) (nt :: NT) (p :: ProdName) where
-  Variant :: forall g nt p . KnownSymbol p => SSymbol p -> HList (Args g nt p)
-          -> Variant g nt p
+infixr 5 <<
+(<<) = ArgCons
 
+data EADT (g :: Grammar) (sym :: TNT) where
+  Inner :: forall g nt p . (KnownSymbol p, KnownSymbol nt) => SSymbol p -> ArgList g (Args g nt p)
+        -> EADT g ('N nt)
+  Leaf  :: t -> EADT g ('T t)
 
-type family Symbols2Types (g :: Grammar) (nt :: NT)
-                          (p :: ProdName) (s :: [TNT]) :: [Type] where
-  Symbols2Types g nt p '[] = '[]
-  Symbols2Types g nt p ( T t ': tnts) = t ': Symbols2Types g nt p tnts
-  Symbols2Types g nt p ( 'N n ': tnts)
-    = SomeVariant g nt ': Symbols2Types g nt p tnts
+-- type family Symbols2Types (g :: Grammar) (nt :: NT)
+--                           (s :: [TNT]) :: [Type] where
+--   Symbols2Types g nt '[] = '[]
+--   Symbols2Types g nt ( 'T t ': tnts) = EADT g ('T t) ': Symbols2Types g nt tnts
+--   Symbols2Types g nt ( 'N n ': tnts)
+--     = EADT g ('N nt) ': Symbols2Types g nt tnts
 
-type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) = (r :: [Type]) where
-  Args g nt p = Symbols2Types g nt p (ArgsAux g g nt p)
+type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) = (r :: [TNT]) where
+  Args g nt p = -- Symbols2Types g nt
+                (ArgsAux g g nt p)
 type family ArgsAux (h :: Grammar) (g :: Grammar) (nt :: NT) (p :: ProdName)
    :: [TNT]
  where

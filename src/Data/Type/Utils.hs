@@ -147,3 +147,8 @@ infixr 5 :::
 data HKList (f :: k -> Type) (l :: [k]) where
   HKNil  :: HKList f '[]
   HKCons :: f t -> HKList f ts -> HKList f (t ': ts)
+
+
+type family Head (t :: [k]) where
+  Head (t ': ts) = t
+

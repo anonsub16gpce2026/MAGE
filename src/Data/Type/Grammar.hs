@@ -16,6 +16,8 @@ type ProdName = Symbol
 
 data TNT = N NT | T Type
 
+type GSym = TNT -- TODO: refactor
+
 type data Prod = NT :=> [TNT]
 
 -- | Grammar

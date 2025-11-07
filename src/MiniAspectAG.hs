@@ -16,6 +16,7 @@ import Data.Type.Aspect
 import Data.Aspect
 import Data.Type.Grammar
 import Data.EADT
+import Data.Grammar
 
 import GHC.TypeLits
 import Data.Kind
@@ -41,6 +42,12 @@ type family SCh (r :: [SemFuncTy]) :: [AttributionTy] where
   SCh '[] = '[]
   SCh (ic :==> sc ': fcs) = sc ': SCh fcs
 
+type family IP (io :: RuleTy) :: AttributionTy where
+  IP (ip ': sc :-> _) = ip
+type family SP (io :: RuleTy) :: AttributionTy where
+  SP (_ :-> sp ': ic) = sp
+
+
 kn :: HKList SemFunc (fcs :: [SemFuncTy]) -> Family (ICh fcs)
    -> Family (SCh fcs)
 kn HKNil _ = EmptyFam
@@ -48,42 +55,46 @@ kn (HKCons fc fcs) (c :- cs)
   = case fc of
       SemFunc f -> f c :- kn fcs cs
 
-
-knit :: Rule ( ip ': SCh fcs :-> sp ': ICh fcs) -> HKList SemFunc fcs
-     -> Attribution ip -> Attribution sp
+knit :: Rule (ip ': SCh fcs :-> sp ': ICh fcs)
+     -> HKList SemFunc fcs
+     -> Attribution ip
+     -> Attribution sp
 knit (MkRule rul) fc ip
   = let (sp :- ic) = rul (ip :- sc)
         sc         = kn fc ic
     in sp
 
+type family BuildFC (g :: Grammar) (a :: Schema) (r :: AspectTy)
+                    (p :: ProdName)(chis :: [GSym]) :: [SemFuncTy] where
+  BuildFC g a r p '[] = '[]
+  BuildFC g a r p ('T t ': chis)
+     = '[] :==> '[ '("term", t)] ': BuildFC g a r p chis
+  BuildFC g a r p ('N nt ': chis)
+     = I nt a :==> S nt a ': BuildFC g a r p chis
+
+buildFC :: Proxy g -> Proxy a -> Aspect r -> SSymbol p
+        -> Proxy chis -> ArgList g chis
+        -> HKList SemFunc (BuildFC g a r p chis)
+buildFC g a r p Proxy ArgNil = HKNil
+buildFC g a r p Proxy (ArgCons (Leaf t) args)
+  = HKCons (SemFunc $ \_ -> MkAtt t :. EmptyAtt) $ buildFC  g a r p Proxy args
+buildFC g a r p Proxy (ArgCons t@(Inner prd vchis) args)
+  = HKCons (SemFunc $ semA g a r t) $ buildFC  g a r p Proxy args
 
 
-lemma_rul_get :: Proxy g -> Proxy a -> SSymbol prd ->
-             TopRuleTyGram g a :# prd :~: TopRuleTyProd g a prd
-lemma_rul_get g a p = unsafeCoerce Refl
+semA ::    Proxy g -> Proxy (a :: Schema) -> Aspect r
+       -> EADT g ('N nt) 
+       -> Attribution ip -> Attribution sp
+semA g a r t@(Inner prd args) = semP prd g a r t
 
+semP :: KnownSymbol p
+     => SSymbol p -> Proxy g -> Proxy (a :: Schema) -> Aspect r -> EADT g ('N nt) 
+     -> Attribution ip -> Attribution sp
+semP p g a r (Inner prd args) =
+    case sameSymbol p prd of
+      Just Refl -> knit (unsafeCoerce (r ## p)) $ buildFC g a r p Proxy args
 
--- class FC (g :: Grammar)  (a   :: Schema)
---          (r :: AspectTy) (p   :: ProdName) (nt :: NT)
---          (tnt :: [TNT]) where
--- --  type BuildFC g a r p nt :: [SemFuncTy]
---   buildFC' :: Proxy g -> Proxy a -> Aspect r -> Proxy p -> Proxy nt
---            -> Proxy tnt -> HList (Args g nt p)
---            -> HKList SemFunc (BuildFC g a r p nt tnt)
-
-type family BuildFC (g :: Grammar)  (a   :: Schema)
-                    (r :: AspectTy) (p   :: ProdName)
-                    (nt :: NT) (args  :: [Type])
-     :: [SemFuncTy]
-  where
-  BuildFC g a r p nt '[] = '[]
-  BuildFC g a r p nt (SomeVariant g nt' ': ts)
-    = I nt' a :==> S nt' a ': BuildFC g a r p nt ts
-  BuildFC g a r p nt (t ': ts)
-    = '[] :==> '[ '( "term", t)] ': BuildFC g a r p nt ts
-
-buildFC :: Proxy g -> Proxy a -> Aspect r -> Proxy p -> Proxy nt
-        -> HList (Args g nt p)
-        -> HKList SemFunc (BuildFC g a r p nt (Args g nt p)) 
-buildFC g a r p nt HNil = HKNil
-buildFC g a r p nt (t ::: ts) = undefined
+sem ::    Proxy g -> Proxy (a :: Schema) -> Aspect (TopRuleTyGram g a)
+       -> EADT g ('N nt) 
+       -> Attribution (I nt a) -> Attribution (S nt a)
+sem = semA

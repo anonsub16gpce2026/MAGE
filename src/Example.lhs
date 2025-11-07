@@ -22,6 +22,7 @@
 > import Data.EADT
 > import GHC.TypeLits
 > import MiniAspectAG
+> import Data.Proxy
 
 Syntax
 ======
@@ -38,11 +39,11 @@ for a production prd. It takes the Heterogeneous list of
 suitable arguments. For instance the following AST represents
 the expression `2`:
 
-> val2 = Variant @G @"E" @"val" symbolSing $  (2 :: Int) ::: HNil
+> val2 = Inner @G @"E" @"val" symbolSing $ Leaf (2 :: Int) << ArgNil
 
 The following, 2+2 :
 
-> val2p2 = Variant @G @"E" @"add" symbolSing $ SV val2 ::: SV val2 ::: HNil
+> val2p2 = Inner @G @"E" @"add" symbolSing $ val2 <<  val2 <<  ArgNil
 
 The constructor `SV :: Variant g nt prd -> SomeVariant g nt`
 hides the production index, since it is dynamic
@@ -96,3 +97,10 @@ The following Aspect encodes the evaluation semantics.
 For the grammar `G`, `asp_eval` is well-formed if we consider
 S("E") = "eval", S(Int) = "term" and no inherited attributes.
 
+Let us define a schema:
+
+> a_eval = Proxy @( '[ '("E", '[], '[ '("eval", Int)])])
+
+
+
+> eval e = sem (Proxy @G) a_eval asp_eval e EmptyAtt # SSymbol @"eval"
