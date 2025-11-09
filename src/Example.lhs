@@ -90,7 +90,7 @@ combined, not how they are built.
 
 The following Aspect encodes the evaluation semantics. 
 
-> asp_eval =   singAsp @"add" rul_eval_add
+> asp_evalG =  singAsp @"add" rul_eval_add
 >         .:*: singAsp @"val" rul_eval_val
 >         .:*: EmptyAspect
 
@@ -101,6 +101,80 @@ Let us define a schema:
 
 > a_eval = Proxy @( '[ '("E", '[], '[ '("eval", Int)])])
 
+ant then the corresponding evaluator:
+
+> evalG e = sem (Proxy @G) a_eval asp_evalG e EmptyAtt # SSymbol @"eval"
 
 
-> eval e = sem (Proxy @G) a_eval asp_eval e EmptyAtt # SSymbol @"eval"
+
+Syntax extension
+================
+Let us extend the grammar G:
+
+> type H = AddProd '("var", "E" :=> '[ 'T String])  G
+
+We can build the semantics where variables are zero-valued:
+
+> asp_evalH = singAsp @"var" rul_eval_var .:*: asp_evalG
+>   where rul_eval_var
+>           = MkRule $ \(inp :: Family ['[], '[ '("term", String)]]) ->
+>             (MkAtt @"eval" (0::Int) :. EmptyAtt)
+>             :- EmptyAtt
+>             :- EmptyFam
+
+
+And then building the new evaluator
+
+> evalH e = sem (Proxy @H) a_eval asp_evalH e EmptyAtt # SSymbol @"eval"
+
+
+Semantics extension
+===================
+
+> type Env = [(String, Int)]
+
+> asp_evalenvH
+>    =  singAsp @"add" rul_env_l 
+>  .:*: singAsp @"add" rul_env_r
+>  .:*: singAsp @"var" rul_eval_var
+>  .:*: singAsp @"val" dummy
+>  .:*: asp_evalG
+
+> rul_env_l = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[], '[] ]) ->
+>                              EmptyAtt
+>                           :- (MkAtt @"env" (inp .$ SZ # SSymbol @"env")
+>                                  :. EmptyAtt)
+>                           :- EmptyAtt
+>                           :- EmptyFam
+
+> rul_env_r = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[], '[] ]) ->
+>                              EmptyAtt
+>                           :- EmptyAtt
+>                           :- (MkAtt @"env" (inp .$ SZ # SSymbol @"env")
+>                                  :. EmptyAtt)
+>                           :- EmptyFam
+
+> rul_eval_var
+>   = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[ '("term", String)]]) ->
+>             (MkAtt @"eval" ( lookup' (inp .$ (SS SZ) # SSymbol @"term")
+>                                      (inp .$ SZ # SSymbol @"env") )
+>                 :. EmptyAtt)
+>             :- EmptyAtt
+>             :- EmptyFam
+
+> dummy = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[]]) ->
+>                              EmptyAtt
+>                           :- EmptyAtt
+>                           :- EmptyFam
+
+> lookup' l v = case lookup l v of Just a -> a
+
+> evalenvH env e
+>  = sem (Proxy @H) (Proxy @( '[ '("E", '[ '("env", Env)], '[ '("eval", Int)])]))
+>        asp_evalenvH e (MkAtt @"env" env :. EmptyAtt) # SSymbol @"eval"
+
+
+> val2H = Inner @H @"E" @"val" symbolSing $ Leaf (2 :: Int) << ArgNil
+> val2p2H = Inner @H @"E" @"add" symbolSing $ val2H <<  val2H <<  ArgNil
+> val2p2px = Inner @H @"E" @"add" symbolSing $ val2p2H << x <<  ArgNil
+>   where x = Inner @H @"E" @"var" symbolSing $ Leaf "x" << ArgNil

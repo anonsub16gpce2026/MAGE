@@ -17,14 +17,27 @@ import Data.Kind (Constraint, Type)
 type family Leq (a :: (Symbol, k)) (b :: (Symbol, k)) :: Bool where
   Leq '(x, _) '(y, _) = CmpSymbol x y == 'LT || CmpSymbol x y == 'EQ
 
+type family Cm (a :: (Symbol, k)) (b :: (Symbol, k)) :: Ordering where
+  Cm '(x, _) '(y, _) = CmpSymbol x y 
+
 -- | Merge two sorted lists.
+-- type family Merge (xs :: [(Symbol,k)]) (ys :: [(Symbol,k)]) :: [(Symbol,k)] where
+--   Merge '[] ys = ys
+--   Merge xs '[] = xs
+--   Merge (x ': xs) (y ': ys) =
+--     If (Leq x y)
+--        (x ': Merge xs (y ': ys))
+--        (y ': Merge (x ': xs) ys)
+
 type family Merge (xs :: [(Symbol,k)]) (ys :: [(Symbol,k)]) :: [(Symbol,k)] where
   Merge '[] ys = ys
   Merge xs '[] = xs
-  Merge (x ': xs) (y ': ys) =
-    If (Leq x y)
-       (x ': Merge xs (y ': ys))
-       (y ': Merge (x ': xs) ys)
+  Merge (x ': xs) (y ': ys) = MergeAux (Cm x y) (x ': xs) (y ': ys) 
+type family MergeAux (c :: Ordering)
+  (xs :: [(Symbol,k)]) (ys :: [(Symbol,k)]) :: [(Symbol,k)] where
+  MergeAux 'LT (x ': xs) (y ': ys) = x ': Merge xs (y ': ys)
+  MergeAux 'GT (x ': xs) (y ': ys) = y ': Merge (x ': xs) ys
+  MergeAux 'EQ (x ': xs) (y ': ys) = Merge (x ': xs) ys -- TODO: error
 
 -- | Split a list into two halves.
 type family Split (xs :: [a]) :: ([a],[a]) where
@@ -105,7 +118,7 @@ type family SubType (l :: [(Symbol,k)]) (r :: [(Symbol,k)]) :: Constraint
 type family SubTypeAux (o :: Ordering)
               (t :: (Symbol,k)) (t' :: (Symbol,k))
               (ts :: [(Symbol,k)]) (ts' :: [(Symbol,k)]) where
-  SubTypeAux 'EQ _ _ ts ts' = SubType ts ts'
+  SubTypeAux 'EQ '(_, t) '(_, t') ts ts' = (t ~ t', SubType ts ts')
   SubTypeAux 'GT t t' ts ts' = SubType (t ': ts) ts'
   SubTypeAux 'LT _ _ _ _     = TypeError (Text "ERR") 
 

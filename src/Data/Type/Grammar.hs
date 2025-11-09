@@ -10,6 +10,7 @@ import Data.Kind
 import Data.Type.Attribution
 import Data.Type.Rule
 import Data.Type.Aspect
+import Data.Type.Utils
 
 type NT = Symbol
 type ProdName = Symbol
@@ -21,7 +22,11 @@ type GSym = TNT -- TODO: refactor
 type data Prod = NT :=> [TNT]
 
 -- | Grammar
-type Grammar = [(ProdName, Prod)]
+type Grammar = [(ProdName, Prod)] -- ordered
+
+type family AddProd (p :: (ProdName, Prod)) (g :: Grammar) :: Grammar where
+  AddProd p g = Sort (p ': g) -- TODO: improve performance, insertion should be linear
+
 
 -- | getter for grammar
 type family GetProd (p :: ProdName) (g :: Grammar) :: Prod where
@@ -62,11 +67,21 @@ type family TopR (p :: Prod) (s :: Schema) :: RuleTy where
                       :-> (S lhs s ': TopRChiI rhs s) 
 type family TopRChiI (chi :: [TNT]) (s :: Schema) where
   TopRChiI '[] s = '[]
-  TopRChiI (N nt ': tnts) s = I nt s ': TopRChiI tnts s
-  TopRChiI (T t ': tnts) s = '[] ': TopRChiI tnts s
+  TopRChiI ('N nt ': tnts) s = I nt s ': TopRChiI tnts s
+  TopRChiI ('T t ': tnts) s = '[] ': TopRChiI tnts s
 type family TopRChiS (chi :: [TNT]) (s :: Schema) where
   TopRChiS '[] s = '[]
-  TopRChiS (N nt ': tnts) s = S nt s ': TopRChiS tnts s
-  TopRChiS (T t ': tnts) s = '[ '("term", t)] ': TopRChiS tnts s
+  TopRChiS ('N nt ': tnts) s = S nt s ': TopRChiS tnts s
+  TopRChiS ('T t ': tnts) s = '[ '("term", t)] ': TopRChiS tnts s
 
 
+type instance ('[] :: Grammar) :< g = ()
+type instance ( '(pnam, p) ': prds :: Grammar) :< ( '(pnam', p') : prds')
+  = SubGramAux (Compare pnam pnam') ( '(pnam, p) ': prds :: Grammar) ( '(pnam', p') : prds')
+type family SubGramAux (o :: Ordering) (g :: Grammar) (g' :: Grammar) where
+  SubGramAux EQ ( '(pnam, p) ': prds :: Grammar) ( '(pnam', p) : prds')
+    = prds :< prds'
+  SubGramAux GT ( '(pnam, p) ': prds :: Grammar) ( '(pnam', p) : prds')
+    = prds :< ( '(pnam', p) : prds')
+  SubGramAux LT ( '(pnam, p) ': prds :: Grammar) ( '(pnam', p) : prds')
+    = TypeError (Text "ERR: not a subgram")

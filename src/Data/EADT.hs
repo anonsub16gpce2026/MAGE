@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableSuperClasses #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -9,6 +10,7 @@ import GHC.TypeLits
 import Data.Type.Ord
 import Data.Kind
 import Data.Type.Utils
+import Data.Proxy
 
 data ArgList (g :: Grammar) (l :: [TNT]) where
   ArgNil  :: ArgList g '[]
@@ -22,13 +24,19 @@ data EADT (g :: Grammar) (sym :: TNT) where
         -> EADT g ('N nt)
   Leaf  :: t -> EADT g ('T t)
 
--- type family Symbols2Types (g :: Grammar) (nt :: NT)
---                           (s :: [TNT]) :: [Type] where
---   Symbols2Types g nt '[] = '[]
---   Symbols2Types g nt ( 'T t ': tnts) = EADT g ('T t) ': Symbols2Types g nt tnts
---   Symbols2Types g nt ( 'N n ': tnts)
---     = EADT g ('N nt) ': Symbols2Types g nt tnts
+class g :< g' =>
+  Cast (g :: Grammar) (g' :: Grammar) where
+  cast :: Proxy g -> Proxy g' -> EADT g tnt -> EADT g' tnt
 
+-- type family CastChi (g :: Grammar) (g' :: Grammar) (chi :: [GSym]) where
+--   CastChi g g' '[] = '[]
+--   CastChi g g' ('T t ': chis) = 'T t ': CastChi g g' chis
+--   CastChi g g' ('T t ': chis) = 'NT nt ': CastChi g g' chis
+
+--instance g :< g' => Cast g g' where
+--  cast pg pg' (Inner p args) = Inner p args
+
+  
 type family Args (g :: Grammar) (nt :: NT) (p :: ProdName) = (r :: [TNT]) where
   Args g nt p = -- Symbols2Types g nt
                 (ArgsAux g g nt p)
