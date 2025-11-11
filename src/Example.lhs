@@ -59,7 +59,7 @@ Its type states that it depends on eval at the first and second child,
 and computes eval at the father:
 
 > type RuleEvalAdd
->  =   '[ '[],                '[ '("eval", Int)], '[ '("eval", Int)]]
+>   =  '[ '[],                '[ '("eval", Int)], '[ '("eval", Int)]]
 >  :-> '[ '[ '("eval", Int)], '[],                '[]]
 
 The proper rule:
@@ -155,7 +155,7 @@ Semantics extension
 >                           :- EmptyFam
 
 > rul_eval_var
->   = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[ '("term", String)]]) ->
+>    = MkRule $ \(inp :: Family '[ '[ '("env", Env)], '[ '("term", String)]]) ->
 >             (MkAtt @"eval" ( lookup' (inp .$ (SS SZ) # SSymbol @"term")
 >                                      (inp .$ SZ # SSymbol @"env") )
 >                 :. EmptyAtt)
@@ -170,11 +170,12 @@ Semantics extension
 > lookup' l v = case lookup l v of Just a -> a
 
 > evalenvH env e
->  = sem (Proxy @H) (Proxy @( '[ '("E", '[ '("env", Env)], '[ '("eval", Int)])]))
->        asp_evalenvH e (MkAtt @"env" env :. EmptyAtt) # SSymbol @"eval"
+>    = sem (Proxy @H) (Proxy @( '[ '("E", '[ '("env", Env)], '[ '("eval", Int)])]))
+>         asp_evalenvH e (MkAtt @"env" env :. EmptyAtt) # SSymbol @"eval"
 
 
-> val2H = Inner @H @"E" @"val" symbolSing $ Leaf (2 :: Int) << ArgNil
-> val2p2H = Inner @H @"E" @"add" symbolSing $ val2H <<  val2H <<  ArgNil
+> val2H    = Inner @H @"E" @"val" symbolSing $ Leaf (2 :: Int) << ArgNil
+> val2p2H  = Inner @H @"E" @"add" symbolSing $ val2H <<  val2H <<  ArgNil
 > val2p2px = Inner @H @"E" @"add" symbolSing $ val2p2H << x <<  ArgNil
 >   where x = Inner @H @"E" @"var" symbolSing $ Leaf "x" << ArgNil
+
