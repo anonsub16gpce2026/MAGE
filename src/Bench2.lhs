@@ -25,6 +25,7 @@
 > import GHC.TypeLits
 > import MiniAspectAG
 > import Data.Proxy
+> import Data.Type.Equality
 
 Syntax
 ======
@@ -49,6 +50,17 @@ A grammar for a simple expression language:
 
 > val2 = Inner @G @"E" @"val" symbolSing $ Leaf (2 :: Int) << ArgNil
 
+> mkFull :: KnownSymbol prd => EADT G ('N "E") -> SSymbol prd -> EADT G ('N "E")
+> mkFull e prd = case sameSymbol prd (Proxy @"add1") of
+>                  Just Refl -> Inner prd (e << e << ArgNil)
+>                  _ -> case sameSymbol prd (Proxy @"3add1") of
+>                         Just Refl -> Inner prd (e << e << e << ArgNil)
+>                         _ ->  case sameSymbol prd (Proxy @"val") of
+>                                   Just Refl -> Inner prd (Leaf (1:: Int) << ArgNil)
+>                                   _ ->  case sameSymbol prd (Proxy @"var") of
+>                                           Just Refl -> Inner prd (Leaf "x" << ArgNil)
+>                                           _ -> undefined    
+
 > type RuleEvalAdd eval
 >  =   '[ '[],                '[ '(eval, Int)], '[ '(eval, Int)]]
 >  :-> '[ '[ '(eval, Int)], '[],                '[]]
@@ -70,7 +82,7 @@ A grammar for a simple expression language:
 > rul_eval_add3 :: forall eval. KnownSymbol eval => Proxy eval -> Rule (RuleEvalAdd3 eval) 
 > rul_eval_add3 _ = MkRule $ \inp ->
 >   (MkAtt @eval ((inp .$ (SS SZ)) # SSymbol @eval
->     + (inp .$ (SS $ SS SZ)) # SSymbol @eval)
+>     + (inp .$ (SS $ SS SZ)) # SSymbol @eval + (inp .$ (SS $ SS $ SS SZ)) # SSymbol @eval)
 >        :. EmptyAtt)
 >   :- EmptyAtt
 >   :- EmptyAtt
