@@ -20,7 +20,8 @@ infixr 5 <<
 (<<) = ArgCons
 
 data EADT (g :: Grammar) (sym :: TNT) where
-  Inner :: forall g nt p . (KnownSymbol p, KnownSymbol nt) => SSymbol p -> ArgList g (Args g nt p)
+  Inner :: forall g nt p . (KnownSymbol p, KnownSymbol nt)
+    => SSymbol p -> ArgList g (Args g nt p)
         -> EADT g ('N nt)
   Leaf  :: t -> EADT g ('T t)
 
@@ -54,4 +55,4 @@ type family ArgsAux' (h :: Grammar) (o :: Ordering)
  where
    ArgsAux' h EQ (lhs :=> rhs) g nt pnam = rhs
    ArgsAux' h LT (lhs :=> rhs) g nt pnam = ArgsAux h g nt pnam
-   
+

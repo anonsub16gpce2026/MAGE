@@ -65,3 +65,6 @@ castAttr = castAttrAux
       = case cmpSymbol (getP att) (getP att') of
           EQI -> att :. (castAttrAux atts atts')
           LTI -> castAttrAux atts r
+
+singAttr :: forall l v . KnownSymbol l => v -> Attribution '[ '(l,v)]
+singAttr v = MkAtt v :. EmptyAtt 

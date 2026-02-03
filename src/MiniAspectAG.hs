@@ -24,6 +24,10 @@ import Data.Type.Equality
 import Data.Proxy
 import Unsafe.Coerce
 
+import Control.IMonad
+import Control.Monad qualified as M
+import Control.Monad.Reader
+
 -- | stores semantic functions, i.e. functions from inherited attributes
 -- (input) to synthesized attributes (output)
 data SemFunc (f :: SemFuncTy) where
@@ -82,7 +86,7 @@ buildFC g a r p Proxy (ArgCons t@(Inner prd vchis) args)
   = HKCons (SemFunc $ semA g a r t) $ buildFC  g a r p Proxy args
 
 
-semA ::    Proxy g -> Proxy (a :: Schema) -> Aspect r
+semA ::   Proxy g -> Proxy (a :: Schema) -> Aspect r
        -> EADT g ('N nt) 
        -> Attribution ip -> Attribution sp
 semA g a r t@(Inner prd args) = semP prd g a r t
@@ -98,3 +102,18 @@ sem ::    Proxy g -> Proxy (a :: Schema) -> Aspect (TopRuleTyGram g a)
        -> EADT g ('N nt) 
        -> Attribution (I nt a) -> Attribution (S nt a)
 sem = semA
+
+
+
+-- Indexed Monad instances to build combinators
+instance Return (Reader (Family f)) where
+  preturn a = M.return a
+
+instance Bind (Reader (Family f1)) (Reader (Family f2)) where
+  type (Reader (Family f1)) :>>= (Reader (Family f2))
+     = Reader (Family (Ext f1 f2))
+  m >>=. f = reader $ \inp ->
+    let i1 = unsafeCoerce inp
+        i2 = unsafeCoerce inp
+        out = runReader (f (runReader m i1)) i2
+    in out  
