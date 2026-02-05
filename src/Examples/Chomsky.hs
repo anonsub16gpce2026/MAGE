@@ -87,4 +87,6 @@ evalG e = sem (Proxy @G) a_eval asp_evalG e EmptyAtt # SSymbol @"eval"
 val2' = CEADT.Leaf @G @Int @"val" (2 :: Int)
 val2p2' = CEADT.Inner @G @"E" @"add" symbolSing val2' val2'
 
+evalG' :: KnownSymbol p => CEADT.EADT G ('N "E") p -> Int
+evalG' e = CAG.sem (Proxy @G) a_eval asp_evalG e EmptyAtt # SSymbol @"eval"
 

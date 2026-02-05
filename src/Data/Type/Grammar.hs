@@ -51,6 +51,14 @@ type family I (nt :: NT) (s :: Schema):: AttributionTy where
   I nt ( '(nt, inh, _) ': _) = inh
   I nt ( _ ': schema) = I nt schema
 
+type family SS (sym :: TNT) (s :: Schema):: AttributionTy where
+  SS ('N nt) a = S nt a
+  SS ('T t) _   = '[ '("term", t)]
+type family II (sym :: TNT) (s :: Schema):: AttributionTy where
+  II ('N nt) a = I nt a
+  II ('T t) _   = '[]
+
+
 
 type family TopRuleTyGram (g :: Grammar) (s :: Schema) :: AspectTy where
   TopRuleTyGram '[] _ = '[]
