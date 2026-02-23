@@ -11,7 +11,7 @@ cabal-version:      3.12
 --   http://haskell.org/cabal/users-guide/
 --
 -- The name of the package.
-name:               MiniAspectAG
+name:               magelib
 
 -- The package version.
 -- See the Haskell package versioning policy (PVP) for standards
@@ -70,7 +70,8 @@ library
                       Data.Type.Utils,
                       Control.IMonad,
                       Examples.Example,
-                      Examples.Chomsky
+                      Examples.Chomsky,
+                      Language.MAGE
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -112,4 +113,4 @@ test-suite MiniAspectAG-test
     -- Test dependencies.
     build-depends:
         base ^>=4.18.3.0,
-        MiniAspectAG
+        magelib

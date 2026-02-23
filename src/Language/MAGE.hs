@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 
-module MiniAspectAG where
+module Language.MAGE where
 
 import Data.Type.Attribution
 import Data.Attribution

@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 
-module Chomsky.MiniAspectAG where
+module Chomsky.MAGE where
 
 import Data.Type.Attribution
 import Data.Attribution
@@ -20,8 +20,8 @@ import Data.Grammar
 import Data.Proxy
 
 --import MiniAspectAG hiding (sem)
-import MiniAspectAG qualified as M
-import MiniAspectAG (SemFuncTy, SemFunc(..), SCh, ICh, (:==>))
+import Language.MAGE qualified as M
+import Language.MAGE (SemFuncTy, SemFunc(..), SCh, ICh, (:==>))
 import Data.Chomsky.EADT qualified as C
 
 import Unsafe.Coerce
