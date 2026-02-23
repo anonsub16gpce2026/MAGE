@@ -22,9 +22,9 @@ import Data.Proxy
 
 import Prelude hiding ((>>), (>>=), return)
 import Control.IMonad
-import MiniAspectAG
+import Language.MAGE
 
-import Chomsky.MiniAspectAG qualified as CAG
+import Chomsky.MAGE qualified as CAG
 import Data.Chomsky.EADT qualified as CEADT
 {---------
 Some combinators for Grammars in Chomsky Normal Form: Productions
