@@ -5,8 +5,10 @@ module Data.Type.Aspect where
 
 import Data.Type.Rule
 import GHC.TypeLits
+import Data.Type.Utils
 
 type AspectTy = [(Symbol, RuleTy)]
+type instance Sub (t :: RuleTy) u = t :< u
 
 type family (asp :: AspectTy) :*: (asp' :: AspectTy) :: AspectTy where
   '[] :*: asp' = asp'
@@ -26,4 +28,7 @@ type family CombineAsp (o :: Ordering) (prd :: Symbol) (prd' :: Symbol)
 type family (a :: AspectTy) :# (l :: Symbol) :: RuleTy where
   ( '(l, r) ': asp) :# l = r
   ( '(l, r) ': asp) :# l' = asp :# l'
-  
+
+
+-- subtyping for aspects
+type instance (l :: AspectTy) :< (m :: AspectTy) = SubType l m

@@ -86,13 +86,19 @@ buildFC g a r p Proxy (ArgCons t@(Inner prd vchis) args)
   = HKCons (SemFunc $ semA g a r t) $ buildFC  g a r p Proxy args
 
 
+
+--------- semantic functions
+
+
 semA ::   Proxy g -> Proxy (a :: Schema) -> Aspect r
        -> EADT g ('N nt) 
        -> Attribution ip -> Attribution sp
 semA g a r t@(Inner prd args) = semP prd g a r t
 
+
 semP :: KnownSymbol p
-     => SSymbol p -> Proxy g -> Proxy (a :: Schema) -> Aspect r -> EADT g ('N nt) 
+     => SSymbol p -> Proxy g -> Proxy (a :: Schema)
+     -> Aspect r -> EADT g ('N nt) 
      -> Attribution ip -> Attribution sp
 semP p g a r (Inner prd args) =
     case sameSymbol p prd of
@@ -104,14 +110,26 @@ semTop ::    Proxy g -> Proxy (a :: Schema) -> Aspect (TopRuleTyGram g a)
 semTop = semA
 
 
-sem ::   (r :< (TopRuleTyGram g a))
+
+
+-- the proper semantic function, it works iff the aspect type checks
+-- against the attribute schema type
+
+sem ::   (r :< TopRuleTyGram g a)
        => Proxy g -> Proxy (a :: Schema) -> Aspect r
        -> EADT g ('N nt) 
        -> Attribution (I nt a) -> Attribution (S nt a)
 sem = semA
 
+-- TODO
+type family Infer (g :: Grammar) (r :: AspectTy) :: Schema
+-- semantic function inferring the schema
+semInfer :: (a ~ Infer g r)
+         => Proxy g -> Aspect r -> EADT g ('N nt) 
+         -> Attribution (I nt a) -> Attribution (S nt a)
+semInfer = undefined
 
-
+--------------------------------------------------------------------------------
 -- Indexed Monad instances to build combinators
 instance Return (Reader (Family f)) where
   preturn a = M.return a

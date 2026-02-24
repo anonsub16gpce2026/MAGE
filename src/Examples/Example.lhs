@@ -234,3 +234,14 @@ Ecce the full evaluator:
 =================================================================================
 =================================================================================
 
+
+> asp_evalenvH'
+>    =  singAsp @"add" rul_env_l 
+>  .:*: singAsp @"add" rul_env_r
+>  .:*: singAsp @"var" rul_eval_var
+>  .:*: asp_evalG
+
+> asp_evalenvIll
+>    =  singAsp @"add" rul_env_r
+>  .:*: singAsp @"var" rul_eval_var
+>  .:*: asp_evalG
