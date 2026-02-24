@@ -118,7 +118,7 @@ Let us define an attribute schema:
 
 We can then build the corresponding evaluator:
 
-> evalG e = sem (Proxy @G) a_eval asp_evalG e EmptyAtt # SSymbol @"eval"
+> evalG e = semTop (Proxy @G) a_eval asp_evalG e EmptyAtt # SSymbol @"eval"
 
 
 
@@ -140,7 +140,7 @@ We can build the semantics where variables are zero-valued:
 
 And then we can build the new evaluator
 
-> evalH e = sem (Proxy @H) a_eval asp_evalH e EmptyAtt # SSymbol @"eval"
+> evalH e = semTop (Proxy @H) a_eval asp_evalH e EmptyAtt # SSymbol @"eval"
 
 
 Note that, while we do everything in this file, each of the previous
@@ -219,7 +219,7 @@ Ecce the full evaluator:
 
 > evalenvH :: Env -> EADT H ('N "E") -> Int
 > evalenvH env e
->    = sem (Proxy @H) (Proxy @( '[ '("E", '[ '("env", Env)], '[ '("eval", Int)])]))
+>    = semTop (Proxy @H) (Proxy @( '[ '("E", '[ '("env", Env)], '[ '("eval", Int)])]))
 >         asp_evalenvH e (MkAtt @"env" env :. EmptyAtt) # SSymbol @"eval"
 
 -- some expressions, just to play with
@@ -234,4 +234,3 @@ Ecce the full evaluator:
 =================================================================================
 =================================================================================
 
-A better interface

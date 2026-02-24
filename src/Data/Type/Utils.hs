@@ -118,9 +118,12 @@ type family SubType (l :: [(Symbol,k)]) (r :: [(Symbol,k)]) :: Constraint
 type family SubTypeAux (o :: Ordering)
               (t :: (Symbol,k)) (t' :: (Symbol,k))
               (ts :: [(Symbol,k)]) (ts' :: [(Symbol,k)]) where
-  SubTypeAux 'EQ '(_, t) '(_, t') ts ts' = (t ~ t', SubType ts ts')
+  SubTypeAux 'EQ '(_, t) '(_, t') ts ts' = (Sub t t', SubType ts ts')
   SubTypeAux 'GT t t' ts ts' = SubType (t ': ts) ts'
   SubTypeAux 'LT _ _ _ _     = TypeError (Text "ERR") 
+
+type family Sub (t :: k)(u :: k) :: Constraint
+type instance Sub (t :: Type) (u :: Type) = t ~ u
 
 -- |  subtyping
 type family (t :: k) :< (u :: k) :: Constraint

@@ -98,7 +98,14 @@ semP p g a r (Inner prd args) =
     case sameSymbol p prd of
       Just Refl -> knit (unsafeCoerce (r ## p)) $ buildFC g a r p Proxy args
 
-sem ::    Proxy g -> Proxy (a :: Schema) -> Aspect (TopRuleTyGram g a)
+semTop ::    Proxy g -> Proxy (a :: Schema) -> Aspect (TopRuleTyGram g a)
+       -> EADT g ('N nt) 
+       -> Attribution (I nt a) -> Attribution (S nt a)
+semTop = semA
+
+
+sem ::   (r :< (TopRuleTyGram g a))
+       => Proxy g -> Proxy (a :: Schema) -> Aspect r
        -> EADT g ('N nt) 
        -> Attribution (I nt a) -> Attribution (S nt a)
 sem = semA

@@ -45,9 +45,6 @@ data Rule (r :: RuleTy) where
   MkRule :: {runRule :: Family inp -> Family out} -> Rule (inp :-> out)
 
 
-
-
-
 (.+.) :: Rule (inp :-> out) -> Rule (inp' :-> out')
       -> Rule (Ext inp inp' :-> Ext out out')
 (MkRule f) .+. (MkRule g)
@@ -55,3 +52,4 @@ data Rule (r :: RuleTy) where
   let out1 = f (Unsafe.Coerce.unsafeCoerce inp :: Family inp)
       out2 = g (Unsafe.Coerce.unsafeCoerce inp :: Family inp')
   in out1 .+ out2
+
