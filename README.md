@@ -2,8 +2,7 @@
 
 MAGE is a EDSL embedded in Haskell. 
 
-MAGE implements the type system introduced [here](https://www.fing.edu.uy/~jpgarcia/papers/GPV2025-formalextgrams.pdf)
-by using type-level programming to encode the type-system.
+MAGE implements the type system introduced in the paper where you get this repository by using type-level programming to encode the type-system.
 
-There is a [literate program](https://gitlab.fing.edu.uy/jpgarcia/mage/-/blob/master/src/Examples/Example.lhs)
+There is a [literate program](https://gitlab.fing.edu.uy/anonsub16gpce2026/mage/-/blob/master/src/Examples/Example.lhs)
 in the repository that briefly shows the capabilities of the library.
